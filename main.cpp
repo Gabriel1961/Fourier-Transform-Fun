@@ -18,7 +18,7 @@ const float PI = 3.14159265359;
 #define VISUAL 0
 // x > 0 - nr de frecvente cu care sa fie construita imaginea
 // -1    - nr maxim de frecvente posibile 
-#define DELIMG 4
+#define DELIMG -1
 // 0     - dezactivat
 // x > 0 - da overide la imaginea initial cu una sinsoidala
 int SIN_IMAGE_FREQ = 0;
