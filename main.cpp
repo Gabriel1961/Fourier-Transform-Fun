@@ -21,7 +21,7 @@ const float PI = 3.14159265359;
 #define DELIMG -1
 // 0     - dezactivat
 // x > 0 - da overide la imaginea initial cu una sinsoidala
-int SIN_IMAGE_FREQ = 20;
+int SIN_IMAGE_FREQ = 0;
 int SIN_IMAGE_FREQ2 = 30;
 // 1 - sinus perpendicular 
 // 2 - sinus pe diagonala
