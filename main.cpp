@@ -18,7 +18,7 @@ const float PI = 3.14159265359;
 #define VISUAL 0
 // x > 0 - nr de frecvente cu care sa fie construita imaginea
 // -1    - nr maxim de frecvente posibile 
-#define DELIMG -1
+#define DELIMG 4
 // 0     - dezactivat
 // x > 0 - da overide la imaginea initial cu una sinsoidala
 int SIN_IMAGE_FREQ = 0;
@@ -27,6 +27,8 @@ int SIN_IMAGE_FREQ2 = 30;
 // 2 - sinus pe diagonala
 // 3 - sinus compus pe coloana
 #define MOD_SIN 3
+#define SHIFT_TO_MIDDLE 0
+#define ENABLE_SPECTRAL_LEAKAGE 0
 int reverse(int num, int lg_n) {
 	int res = 0;
 	for (int i = 0; i < lg_n; i++) {
@@ -52,7 +54,7 @@ void fft(vector<cd>& a, bool invert) {
 		double ang = 2 * PI / len * (invert ? -1 : 1);
 		cd wlen(cos(ang), sin(ang));
 		for (int i = 0; i < n; i += len) {
-#if VISUAL
+#if SHIFT_TO_MIDDLE
 			cd w(pow(wlen, a.size() / 2));
 #else
 			cd w(1);
@@ -141,7 +143,12 @@ vector<vector<cvec3>> processImage(u8vec3* img, ivec2 size) {
 			trans[i][j] = cvec3(r1[i],g1[i],b1[i]);
 		}
 	}
-
+#if DELIMG != -1
+	for (int i = 0; i < Y; i++)
+		for (int j = 0; j < X; j++)
+			if (i >= DELIMG && j >= DELIMG && j <= X - DELIMG && i <= Y - DELIMG)
+				trans[i][j] = cvec3(0, 0, 0);
+#endif
 #if VISUAL
 	for (int i = 0; i < size.y; i++)
 		for (int j = 0; j < size.x; j++) {
@@ -159,12 +166,7 @@ void parseImage(u8vec3* img, ivec2 size, vector<vector<cvec3>>& trans) {
 	int X = trans[0].size();
 	vector<cd> r(X), g(X), b(X);
 	vector<cd> r1(Y), g1(Y), b1(Y);
-#if VISUAL == 0 and DELIMG != -1
-	for (int i = 0; i < Y; i++)
-		for (int j = 0; j < X; j++)
-			if(i > DELIMG && j > DELIMG)
-				trans[i][j] = cvec3(0, 0, 0);
-#endif
+
 
 	for (int j = 0; j < X; j++) { // pentru fiecare coloana
 		for (int i = 0; i < Y; i++) {
@@ -202,6 +204,9 @@ void parseImage(u8vec3* img, ivec2 size, vector<vector<cvec3>>& trans) {
 		for (int j = 0; j < size.x; j++) {
 			cvec3 x = trans[i][j];
 			vec3 xv = vec3(x.r.real(), x.g.real(), x.b.real());
+#if ENABLE_SPECTRAL_LEAKAGE == 0
+			xv = clamp(xv, vec3(0, 0, 0), vec3(1, 1, 1));
+#endif
 			img[i * size.x + j] = u8vec3(xv * 255.f);
 		}
 }
@@ -224,7 +229,7 @@ int main()
 	SDL_Rect dstrect = { 0, 0, size.x, size.y }; // resized imag size
 	
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window* window = SDL_CreateWindow("Image", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, dstrect.w, dstrect.h, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	SDL_Window* window = SDL_CreateWindow("Image", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, dstrect.w, dstrect.h, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE |SDL_WINDOW_BORDERLESS);
 	SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 	SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(img, size.x, size.y, chan* 8, size.x * chan, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
 
