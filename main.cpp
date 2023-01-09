@@ -16,13 +16,19 @@ const float PI = 3.14159265359;
 // 0 - aplica fft dupa fft-1 dupa afiseaza
 // 1 - arata imaginea dupa fft 
 #define VISUAL 0
-// x > 0 - nr de frecvente cu care sa fie construita imaginea
-// -1    - nr maxim de frecvente posibile 
-#define DELIMG -1
+
+// 0 - dezactiveaza selectarea bandei de frecventa
+// 1 - selecteaza doar banda de frecventa [DELIMG_ST,DELIMG_DR]
+// 2 - selecteaza totul in afara de banda de frecventa [DELIMG_ST,DELIMG_DR]
+#define SELECT_DELIMG 0
+#define DELIMG_ST 32
+#define DELIMG_DR 256
+
 // 0     - dezactivat
 // x > 0 - da overide la imaginea initial cu una sinsoidala
 int SIN_IMAGE_FREQ = 0;
 int SIN_IMAGE_FREQ2 = 30;
+
 // 1 - sinus perpendicular 
 // 2 - sinus pe diagonala
 // 3 - sinus compus pe coloana
@@ -143,12 +149,29 @@ vector<vector<cvec3>> processImage(u8vec3* img, ivec2 size) {
 			trans[i][j] = cvec3(r1[i],g1[i],b1[i]);
 		}
 	}
-#if DELIMG != -1
+#if SELECT_DELIMG == 1
 	for (int i = 0; i < Y; i++)
 		for (int j = 0; j < X; j++)
-			if (i >= DELIMG && j >= DELIMG && j <= X - DELIMG && i <= Y - DELIMG)
+			if (((j>=DELIMG_ST && j<=X-DELIMG_ST-1) && 
+				(i >= DELIMG_ST && i <= DELIMG_DR ||
+				i >= Y-DELIMG_DR-1 && i <= Y-DELIMG_ST-1)||
+				(i>= DELIMG_ST && i<=Y-DELIMG_ST-1) && 
+				(j >= DELIMG_ST && j <= DELIMG_DR ||
+				j >= X - DELIMG_DR - 1 && j <= X - DELIMG_ST - 1
+				)) == false)
 				trans[i][j] = cvec3(0, 0, 0);
-#endif
+#elif SELECT_DELIMG == 2
+	for (int i = 0; i < Y; i++)
+		for (int j = 0; j < X; j++)
+			if ((j >= DELIMG_ST && j <= X - DELIMG_ST - 1) &&
+				(i >= DELIMG_ST && i <= DELIMG_DR ||
+					i >= Y - DELIMG_DR - 1 && i <= Y - DELIMG_ST - 1) ||
+				(i >= DELIMG_ST && i <= Y - DELIMG_ST - 1) &&
+				(j >= DELIMG_ST && j <= DELIMG_DR ||
+					j >= X - DELIMG_DR - 1 && j <= X - DELIMG_ST - 1
+					))
+				trans[i][j] = cvec3(0, 0, 0);
+#endif 
 #if VISUAL
 	for (int i = 0; i < size.y; i++)
 		for (int j = 0; j < size.x; j++) {
